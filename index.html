@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AUREX | Intelligent IT Helpdesk</title>
+<style>
+  /* ---------- COLORS (change them here) ---------- */
+  :root {
+    --bg: #0d0a22; --glass: rgba(255,255,255,.06); --line: rgba(255,255,255,.14);
+    --text: #f3f0ff; --muted: #b4abd9; --a: #8b5cf6; --b: #06b6d4;
+    --ok: #34d399; --warn: #fbbf24; --bad: #f87171;
+    --grad: linear-gradient(135deg, #8b5cf6, #06b6d4);
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; color: var(--text); line-height: 1.5;
+    font-family: "Segoe UI", system-ui, Arial, sans-serif;
+    background: radial-gradient(circle at 12% 0%, rgba(99,52,220,.45), transparent 45%),
+                radial-gradient(circle at 92% 18%, rgba(8,145,178,.35), transparent 40%), var(--bg);
+    background-attachment: fixed;
+  }
+  a { color: inherit; text-decoration: none; }
+  section { max-width: 1080px; margin: 0 auto; padding: 44px 20px; }
+  h2 { font-size: 28px; margin: 0 0 6px; }
+  .sub { color: var(--muted); margin: 0 0 22px; }
+  .glass { background: var(--glass); border: 1px solid var(--line); border-radius: 18px; backdrop-filter: blur(10px); }
+
+  /* ---------- NAVBAR ---------- */
+  nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; display: flex; justify-content: space-between;
+        align-items: center; padding: 12px 22px; background: rgba(13,10,34,.8); backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--line); }
+  .logo { font-weight: 800; font-size: 19px; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+  .dot { width: 22px; height: 22px; border-radius: 50%; background: var(--grad); }
+  nav .links a { margin-left: 18px; color: var(--muted); font-size: 14px; }
+  nav .links a:hover { color: var(--text); }
+
+  /* ---------- HERO ---------- */
+  .hero { text-align: center; padding-top: 56px; }
+  .orb { width: 92px; height: 92px; margin: 0 auto 18px; border-radius: 50%; display: grid; place-items: center; font-size: 42px;
+         background: var(--grad); box-shadow: 0 0 40px rgba(139,92,246,.7); animation: glow 3s ease-in-out infinite; }
+  @keyframes glow { 50% { box-shadow: 0 0 70px rgba(6,182,212,.8); transform: scale(1.05); } }
+  @media (prefers-reduced-motion: reduce) { .orb { animation: none; } html { scroll-behavior: auto; } }
+  .hero h1 { font-size: 46px; margin: 0 0 12px; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p { max-width: 640px; margin: 0 auto 24px; color: var(--muted); font-size: 18px; }
+  .btn { display: inline-block; background: var(--grad); color: #fff; padding: 13px 28px; border-radius: 30px; font-weight: 600; border: 0; cursor: pointer; font-size: 16px; }
+  .tagline { margin-top: 22px; color: var(--b); font-weight: 600; }
+
+  /* ---------- FEATURES ---------- */
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+  .feature { padding: 18px; }
+  .feature .icon { font-size: 30px; }
+  .feature h3 { font-size: 15px; margin: 8px 0 4px; }
+  .feature p { font-size: 13px; color: var(--muted); margin: 0; }
+
+  /* ---------- DEMO ---------- */
+  .demo { display: grid; grid-template-columns: 1.25fr 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 800px) { .demo { grid-template-columns: 1fr; } .hero h1 { font-size: 32px; } }
+  .chatHead { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  .chatHead .av { width: 40px; height: 40px; border-radius: 50%; background: var(--grad); display: grid; place-items: center; font-size: 20px; }
+  .chatHead small { color: var(--ok); display: block; }
+  #messages { height: 360px; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .msg { max-width: 86%; padding: 10px 14px; border-radius: 16px; font-size: 14px; }
+  .msg.bot { background: rgba(255,255,255,.12); border-bottom-left-radius: 4px; align-self: flex-start; }
+  .msg.user { background: var(--grad); border-bottom-right-radius: 4px; align-self: flex-end; }
+  .msg ul { margin: 6px 0 0; padding-left: 18px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .chips button, .chips input {
+    background: transparent; color: var(--text); border: 1px solid var(--a); border-radius: 20px;
+    padding: 6px 13px; font-size: 13px; cursor: pointer; font-family: inherit;
+  }
+  .chips button:hover { background: var(--a); }
+  .chips input { color-scheme: dark; cursor: text; }
+  #startChips { padding: 0 14px 10px; }
+  .inputRow { display: flex; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--line); }
+  #userInput { flex: 1; padding: 11px 14px; border-radius: 24px; border: 1px solid var(--line); background: rgba(0,0,0,.25); color: var(--text); font-size: 14px; }
+  #send { background: var(--grad); color: #fff; border: 0; border-radius: 24px; padding: 0 20px; cursor: pointer; font-weight: 600; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--b); outline-offset: 2px; }
+
+  /* ---------- LIVE TRACKER ---------- */
+  .tracker { padding: 18px; }
+  .tracker h3 { margin: 0 0 12px; font-size: 17px; display: flex; justify-content: space-between; }
+  .tracker h3 span { color: var(--b); font-size: 14px; }
+  .cat { padding: 10px 12px; border-radius: 12px; background: rgba(139,92,246,.18); font-size: 14px; margin-bottom: 14px; }
+  .cat small { color: var(--muted); display: block; }
+  #steps { list-style: none; margin: 0 0 16px 8px; padding: 0 0 0 18px; border-left: 2px solid var(--line); }
+  #steps li { position: relative; padding: 5px 0; font-size: 14px; color: var(--muted); }
+  #steps li::before { content: ""; position: absolute; left: -27px; top: 9px; width: 14px; height: 14px; border-radius: 50%; background: var(--bg); border: 2px solid var(--line); }
+  #steps li.done { color: var(--text); }
+  #steps li.done::before { background: var(--ok); border-color: var(--ok); }
+  #steps li.active { color: var(--text); font-weight: 600; }
+  #steps li.active::before { border-color: var(--b); }
+  .teamCard { display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 14px; border: 1px solid var(--line); background: rgba(0,0,0,.2); }
+  .tcIcon { font-size: 30px; width: 52px; height: 52px; border-radius: 14px; background: var(--glass); display: grid; place-items: center; }
+  .tcTeam { font-weight: 700; }
+  .tcPerson { font-size: 13px; color: var(--muted); }
+  .meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .badge { font-size: 12px; padding: 4px 10px; border-radius: 20px; background: var(--glass); border: 1px solid var(--line); }
+  .badge.High { color: var(--bad); border-color: var(--bad); }
+  .badge.Medium { color: var(--warn); border-color: var(--warn); }
+  .badge.Low { color: var(--ok); border-color: var(--ok); }
+
+  /* ---------- TEAMS ---------- */
+  .teams { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+  .team { padding: 16px; }
+  .team .icon { font-size: 28px; }
+  .team b { display: block; margin-top: 6px; }
+  .team small { color: var(--muted); display: block; }
+  .team .open { margin-top: 8px; font-size: 13px; color: var(--b); }
+
+  /* ---------- HISTORY ---------- */
+  .stats { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+  .stat { padding: 12px 22px; }
+  .stat b { font-size: 26px; display: block; }
+  .stat span { color: var(--muted); font-size: 13px; }
+  .tableWrap { overflow-x: auto; padding: 6px 14px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; }
+  footer { text-align: center; padding: 26px 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><span class="dot"></span>AUREX</div>
+  <div class="links"><a href="#features">Features</a><a href="#demo">Try it</a><a href="#teams">Teams</a><a href="#history">Tickets</a></div>
+</nav>
+
+<section class="hero">
+  <div class="orb">🤖</div>
+  <h1>Intelligent IT Helpdesk</h1>
+  <p>Meet AUREX, the AI helpdesk that categorizes incidents, suggests solutions, and sends complex problems to the right team at a time that suits you.</p>
+  <a class="btn" href="#demo">Talk to AUREX</a>
+  <div class="tagline">Smart Support | Faster Solutions | Productive People</div>
+</section>
+
+<section id="features">
+  <h2>What AUREX does</h2>
+  <p class="sub">From a simple password reset to a serious security incident.</p>
+  <div class="features">
+    <div class="feature glass"><div class="icon">💬</div><h3>Automatic Ticket Categorization</h3><p>Reads the problem and picks the category.</p></div>
+    <div class="feature glass"><div class="icon">💡</div><h3>AI-Suggested Solutions</h3><p>Quick fixes for simple problems.</p></div>
+    <div class="feature glass"><div class="icon">👥</div><h3>Smart Routing to Right Teams</h3><p>Shows which team and engineer will help you.</p></div>
+    <div class="feature glass"><div class="icon">⏱️</div><h3>Faster Resolution Time</h3><p>Complex issues get a call at your chosen time.</p></div>
+    <div class="feature glass"><div class="icon">📊</div><h3>Continuous Learning from Past Incidents</h3><p>Every ticket is saved in the history.</p></div>
+  </div>
+</section>
+
+<section id="demo">
+  <h2>Try AUREX</h2>
+  <p class="sub">Try "My system is slow" (simple) and "I think my laptop has a virus" (complex).</p>
+  <div class="demo">
+
+    <div class="glass">
+      <div class="chatHead"><div class="av">🤖</div><div><b>AUREX</b><small>● Online</small></div></div>
+      <div id="messages" aria-live="polite"></div>
+      <div id="startChips" class="chips">
+        <button>I can't access my email</button>
+        <button>My system is slow</button>
+        <button>I need software access</button>
+        <button>I think my laptop has a virus</button>
+        <button>Report an issue</button>
+      </div>
+      <div class="inputRow">
+        <input id="userInput" type="text" placeholder="Type your issue..." aria-label="Type your issue">
+        <button id="send">Send</button>
+      </div>
+    </div>
+
+    <div class="glass tracker">
+      <h3>Live ticket tracker <span id="ticketId">No ticket</span></h3>
+      <div class="cat"><small>Incident categorized</small><span id="categoryText">Waiting for an issue...</span></div>
+      <ol id="steps"></ol>
+      <div class="teamCard">
+        <div class="tcIcon" id="tcIcon">👥</div>
+        <div><div class="tcTeam" id="tcTeam">No team assigned yet</div><div class="tcPerson" id="tcPerson">AUREX is ready to help</div></div>
+      </div>
+      <div class="meta"><span class="badge" id="tcPriority">Priority: -</span><span class="badge" id="tcTime">Call time: -</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="teams">
+  <h2>IT teams</h2>
+  <p class="sub">The teams AUREX can route tickets to.</p>
+  <div class="teams" id="teamGrid"></div>
+</section>
+
+<section id="history">
+  <h2>Past incidents</h2>
+  <div class="stats">
+    <div class="stat glass"><b id="statTotal">0</b><span>Total tickets</span></div>
+    <div class="stat glass"><b id="statSolved">0</b><span>Solved by AUREX</span></div>
+    <div class="stat glass"><b id="statTeam">0</b><span>Handled by teams</span></div>
+  </div>
+  <div class="glass tableWrap">
+    <table>
+      <thead><tr><th>Ticket</th><th>Issue</th><th>Category</th><th>Team</th><th>Result</th></tr></thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>AUREX Intelligent IT Helpdesk | Smart Support, Faster Solutions, Productive People</footer>
+
+<script>
+  // ---------- 1. DATA ----------
+  // The IT teams (sample names). "open" = tickets currently open.
+  var teams = {
+    "Accounts Team":  { icon: "🔐", staff: ["Priya Nair", "Arjun Mehta"], open: 2 },
+    "Network Team":   { icon: "🌐", staff: ["Karthik Raja", "Sana Khan"], open: 3 },
+    "Hardware Team":  { icon: "🖥️", staff: ["Divya Lakshmi", "Rahul Verma"], open: 1 },
+    "Software Team":  { icon: "📦", staff: ["Meera Iyer", "Vikram Singh"], open: 2 },
+    "Security Team":  { icon: "🛡️", staff: ["Ananya Rao", "Sanjay Kumar"], open: 1 },
+    "Server Team":    { icon: "🗄️", staff: ["Naveen Prasad", "Fatima Ali"], open: 0 },
+    "IT Support Team":{ icon: "🎧", staff: ["Lakshmi Devi", "Rohan Das"], open: 1 }
+  };
+
+  // Categories: keywords, team, complexity and quick solutions
+  var categories = [
+    { category: "Email / Account Access", team: "Accounts Team", complexity: "simple", priority: "Low",
+      words: ["email", "mail", "login", "log in", "password", "account", "locked", "sign in"],
+      solutions: ["Check your internet connection", "Verify your login credentials", "Reset your password (follow the guide)"] },
+    { category: "Slow System / Performance", team: "Hardware Team", complexity: "simple", priority: "Medium",
+      words: ["slow", "hang", "lag", "freeze", "frozen", "stuck", "performance"],
+      solutions: ["Restart your computer", "Close extra apps and browser tabs", "Check for pending updates"] },
+    { category: "Software Access", team: "Software Team", complexity: "simple", priority: "Low",
+      words: ["software", "install", "license", "licence", "application", "program"],
+      solutions: ["Check that the software is on the approved list", "Fill in the software request form", "Ask your manager to approve the request"] },
+    { category: "Network / Wi-Fi / VPN", team: "Network Team", complexity: "simple", priority: "Medium",
+      words: ["wifi", "wi-fi", "internet", "vpn", "network", "connect"],
+      solutions: ["Turn Wi-Fi off and on again", "Reconnect to the network", "Update your VPN app"] },
+    { category: "Printer / Hardware", team: "Hardware Team", complexity: "simple", priority: "Low",
+      words: ["printer", "print", "keyboard", "mouse", "screen", "monitor", "laptop"],
+      solutions: ["Check all cables and power", "Restart the device", "Try it on another computer"] },
+    { category: "Security Incident", team: "Security Team", complexity: "complex", priority: "High",
+      words: ["virus", "malware", "hacked", "hack", "phishing", "suspicious", "breach", "ransomware", "stolen"],
+      solutions: ["Disconnect from the internet", "Do not click unknown links", "Do not delete any files"] },
+    { category: "Server / Data Loss", team: "Server Team", complexity: "complex", priority: "High",
+      words: ["server", "database", "outage", "crash", "data loss", "lost my data", "deleted", "backup"],
+      solutions: ["Stop saving new files", "Note the exact time it happened", "Do not restart the system"] }
+  ];
+
+  // Words that make ANY problem complex
+  var complexWords = ["urgent", "emergency", "critical", "everyone", "all users", "completely"];
+
+  var tickets = [
+    { id: "TKT-1001", issue: "Cannot log in to email", category: "Email / Account Access", team: "-", result: "Solved by AUREX" },
+    { id: "TKT-1002", issue: "VPN keeps disconnecting", category: "Network / Wi-Fi / VPN", team: "Network Team", result: "Call scheduled: Today 3:00 PM" },
+    { id: "TKT-1003", issue: "Suspicious email link clicked", category: "Security Incident", team: "Security Team", result: "Call scheduled: Today 11:30 AM" }
+  ];
+  var ticketNumber = 1003;
+  var current = null; // the ticket the user is working on now
+  var stepNames = ["Issue received", "Incident categorized", "Assigned to a team", "Call time scheduled", "Resolved"];
+
+  // ---------- 2. HTML ELEMENTS ----------
+  var messagesBox = document.getElementById("messages");
+  var input = document.getElementById("userInput");
+
+  // ---------- 3. FUNCTIONS ----------
+  function addMessage(text, who, list) {
+    var div = document.createElement("div");
+    div.className = "msg " + who;
+    div.textContent = text;
+    if (list && list.length > 0) {
+      var ul = document.createElement("ul");
+      for (var i = 0; i < list.length; i++) {
+        var li = document.createElement("li");
+        li.textContent = list[i];
+        ul.appendChild(li);
+      }
+      div.appendChild(ul);
+    }
+    messagesBox.appendChild(div);
+    messagesBox.scrollTop = messagesBox.scrollHeight;
+  }
+
+  function addButtons(labels, onClick) {
+    var row = document.createElement("div");
+    row.className = "chips";
+    for (var i = 0; i < labels.length; i++) {
+      var b = document.createElement("button");
+      b.textContent = labels[i];
+      b.onclick = function () { row.remove(); onClick(this.textContent); };
+      row.appendChild(b);
+    }
+    messagesBox.appendChild(row);
+    messagesBox.scrollTop = messagesBox.scrollHeight;
+    return row;
+  }
+
+  function findCategory(text) {
+    text = text.toLowerCase();
+    var best = null, bestScore = 0;
+    for (var i = 0; i < categories.length; i++) {
+      var score = 0;
+      for (var j = 0; j < categories[i].words.length; j++) {
+        if (text.indexOf(categories[i].words[j]) !== -1) { score++; }
+      }
+      if (score > bestScore) { bestScore = score; best = categories[i]; }
+    }
+    return best;
+  }
+
+  function isComplex(text, cat) {
+    if (cat.complexity === "complex") { return true; }
+    for (var i = 0; i < complexWords.length; i++) {
+      if (text.toLowerCase().indexOf(complexWords[i]) !== -1) { return true; }
+    }
+    return false;
+  }
+
+  // Tracker steps: n = how many steps are finished
+  function setStep(n) {
+    var items = document.querySelectorAll("#steps li");
+    for (var i = 0; i < items.length; i++) {
+      items[i].className = i < n ? "done" : (i === n ? "active" : "");
+    }
+  }
+
+  function setBadge(id, text, level) {
+    var el = document.getElementById(id);
+    el.textContent = text;
+    el.className = "badge " + (level || "");
+  }
+
+  function newTicket(text) {
+    ticketNumber++;
+    current = { id: "TKT-" + ticketNumber, issue: text, cat: null, team: "-", person: "", priority: "" };
+    document.getElementById("ticketId").textContent = current.id;
+    document.getElementById("categoryText").textContent = "Reading your issue...";
+    document.getElementById("tcIcon").textContent = "👥";
+    document.getElementById("tcTeam").textContent = "No team assigned yet";
+    document.getElementById("tcPerson").textContent = "AUREX is working on it";
+    setBadge("tcPriority", "Priority: -");
+    setBadge("tcTime", "Call time: -");
+    setStep(1);
+  }
+
+  // Pick the team and an engineer, and show them
+  function assignTeam() {
+    var name = current.cat.team;
+    var team = teams[name];
+    current.team = name;
+    current.person = team.staff[team.open % team.staff.length];
+    team.open++;
+    document.getElementById("tcIcon").textContent = team.icon;
+    document.getElementById("tcTeam").textContent = name;
+    document.getElementById("tcPerson").textContent = current.person + " is solving your problem";
+    setBadge("tcPriority", "Priority: " + current.priority, current.priority);
+    setStep(3);
+    renderTeams();
+  }
+
+  // Send to a team, then ask the user for a time
+  function escalate() {
+    assignTeam();
+    addMessage(current.person + " from the " + current.team + " will solve this. When would you like a call?", "bot");
+    var row = addButtons(["In 15 minutes", "Today 2:00 PM", "Today 4:00 PM", "Tomorrow 10:00 AM"], confirmTime);
+    // extra option: pick your own time
+    var timeInput = document.createElement("input");
+    timeInput.type = "time";
+    timeInput.setAttribute("aria-label", "Pick your own time");
+    var ok = document.createElement("button");
+    ok.textContent = "Confirm my time";
+    ok.onclick = function () {
+      if (timeInput.value === "") { addMessage("Please pick a time first.", "bot"); return; }
+      row.remove();
+      confirmTime(formatTime(timeInput.value));
+    };
+    row.appendChild(timeInput);
+    row.appendChild(ok);
+  }
+
+  function formatTime(value) {
+    var parts = value.split(":");
+    var h = parseInt(parts[0], 10);
+    var ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12;
+    if (h === 0) { h = 12; }
+    return "Today " + h + ":" + parts[1] + " " + ampm;
+  }
+
+  function confirmTime(time) {
+    addMessage(time, "user");
+    setBadge("tcTime", "Call time: " + time);
+    setStep(4);
+    addMessage("Done! " + current.person + " (" + current.team + ") will contact you: " + time + ". Your ticket is " + current.id + ".", "bot");
+    saveTicket("Call scheduled: " + time);
+  }
+
+  function saveTicket(result) {
+    tickets.push({ id: current.id, issue: current.issue, category: current.cat.category, team: current.team, result: result });
+    renderHistory();
+  }
+
+  function issueSolved() {
+    setStep(5);
+    addMessage("Great, glad it worked! I saved this ticket so I can help faster next time.", "bot");
+    saveTicket("Solved by AUREX");
+  }
+
+  function handleUserMessage(text) {
+    text = text.trim();
+    if (text === "") { return; }
+    addMessage(text, "user");
+    if (text === "Report an issue") {
+      addMessage("Sure! Please describe your issue in one sentence.", "bot");
+      return;
+    }
+
+    newTicket(text);
+    var cat = findCategory(text);
+    if (cat === null) {
+      cat = { category: "Other (not recognised)", team: "IT Support Team", complexity: "complex", priority: "Medium", solutions: [] };
+    }
+    var complex = isComplex(text, cat);
+    current.cat = cat;
+    current.priority = complex && cat.priority === "Low" ? "High" : cat.priority;
+    document.getElementById("categoryText").textContent = cat.category + (complex ? " (complex)" : " (simple)");
+    setStep(2);
+
+    if (complex) {
+      addMessage("This looks complex: " + cat.category + ". I am sending it to a specialist team.", "bot");
+      if (cat.solutions.length > 0) { addMessage("While you wait, please do this:", "bot", cat.solutions); }
+      escalate();
+    } else {
+      addMessage("This looks like: " + cat.category + ". Please try these steps:", "bot", cat.solutions);
+      addButtons(["It worked ✅", "Still not fixed ❌"], function (answer) {
+        if (answer.indexOf("worked") !== -1) {
+          issueSolved();
+        } else {
+          addMessage("Okay, this needs a specialist.", "bot");
+          escalate();
+        }
+      });
+    }
+  }
+
+  function renderTeams() {
+    var grid = document.getElementById("teamGrid");
+    grid.innerHTML = "";
+    for (var name in teams) {
+      var t = teams[name];
+      var card = document.createElement("div");
+      card.className = "team glass";
+      card.innerHTML = '<div class="icon">' + t.icon + '</div><b>' + name + '</b><small>🟢 Online</small><div class="open">Open tickets: ' + t.open + '</div>';
+      grid.appendChild(card);
+    }
+  }
+
+  function renderHistory() {
+    var body = document.getElementById("historyBody");
+    body.innerHTML = "";
+    var solved = 0;
+    for (var i = tickets.length - 1; i >= 0; i--) {
+      var t = tickets[i];
+      var row = document.createElement("tr");
+      var values = [t.id, t.issue, t.category, t.team, t.result];
+      for (var j = 0; j < values.length; j++) {
+        var cell = document.createElement("td");
+        cell.textContent = values[j];
+        row.appendChild(cell);
+      }
+      body.appendChild(row);
+      if (t.result === "Solved by AUREX") { solved++; }
+    }
+    document.getElementById("statTotal").textContent = tickets.length;
+    document.getElementById("statSolved").textContent = solved;
+    document.getElementById("statTeam").textContent = tickets.length - solved;
+  }
+
+  // ---------- 4. CONNECT BUTTONS ----------
+  document.getElementById("send").onclick = function () { handleUserMessage(input.value); input.value = ""; };
+  input.onkeydown = function (e) {
+    if (e.key === "Enter") { handleUserMessage(input.value); input.value = ""; }
+  };
+  var startButtons = document.querySelectorAll("#startChips button");
+  for (var q = 0; q < startButtons.length; q++) {
+    startButtons[q].onclick = function () { handleUserMessage(this.textContent); };
+  }
+
+  // ---------- 5. START ----------
+  var stepList = document.getElementById("steps");
+  for (var s = 0; s < stepNames.length; s++) {
+    var li = document.createElement("li");
+    li.textContent = stepNames[s];
+    stepList.appendChild(li);
+  }
+  setStep(0);
+  addMessage("Hi! I'm AUREX, your IT Helpdesk Assistant. How can I help you today?", "bot");
+  renderTeams();
+  renderHistory();
+</script>
+</body>
+</html>
